@@ -1,4 +1,3 @@
-name: Auto-Scraper
 on:
   schedule:
     - cron: '0 * * * *'
@@ -11,20 +10,17 @@ jobs:
       - uses: actions/setup-node@v3
         with: { node-version: '18' }
       - run: npm install
-      # Yeh line Chrome download karegi
       - run: npx puppeteer browsers install chrome
       - run: node scraper.js
-      - name: Commit changes
+
+      - name: Commit and Push
         run: |
           git config --global user.name "Kanchan-Bot"
           git config --global user.email "bot@kanchan.com"
           git add channels.json
           git commit -m "Auto-update links" || exit 0
           git push
-          - name: Run node scraper.js
-        run: node scraper.js
 
-      # Ye step screenshot utha kar GitHub par bhej dega
       - name: Upload Debug Screenshot
         uses: actions/upload-artifact@v4
         with:
