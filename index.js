@@ -1,5 +1,5 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
+import express from 'express';
+import puppeteer from 'puppeteer';
 const fs = require('fs');
 const path = require('path');
 
