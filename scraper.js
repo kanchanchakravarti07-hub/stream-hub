@@ -7,8 +7,8 @@ async function runScraper() {
         args: ['--no-sandbox', '--disable-setuid-sandbox'] 
     });
     const page = await browser.newPage();
-    
-    // Sniffer: Request sniff karke m3u8 link capture karega
+
+    // 1. Sniffer (Request capture)
     page.on('response', async (res) => {
         const url = res.url();
         if (url.includes('.m3u8')) {
@@ -19,29 +19,42 @@ async function runScraper() {
         }
     });
 
-    console.log("1. Navigating...");
+    console.log("Navigating...");
     await page.goto('https://iptv-eldbert.xyz/iptv/', { waitUntil: 'networkidle2' });
 
-    // DEBUG: Page par kya kya links hain, ye print karo
-    const links = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('a')).map(a => a.innerText + " | " + a.href);
-    });
-    console.log("DEBUG: Links found on page:", JSON.stringify(links, null, 2));
+    // 2. Iframe search (Dynamic content ke liye)
+    console.log("Searching in iframes...");
+    const frames = page.frames();
+    let clicked = false;
 
-    // CLICK LOGIC: Generic search
-    await page.evaluate(() => {
-        const allElements = document.querySelectorAll('*'); // Sab kuch scan karo
-        for (let el of allElements) {
-            if (el.innerText && el.innerText.toLowerCase().includes('dsport')) {
-                console.log("Found element with dsport text, clicking...");
+    for (const frame of frames) {
+        const found = await frame.evaluate(() => {
+            const el = Array.from(document.querySelectorAll('*')).find(e => e.innerText && e.innerText.toLowerCase().includes('dsport'));
+            if (el) {
                 el.click();
-                break;
+                return true;
             }
+            return false;
+        });
+        if (found) {
+            clicked = true;
+            console.log("✅ Found and clicked in an iframe!");
+            break;
         }
-    });
+    }
 
-    await new Promise(r => setTimeout(r, 30000));
-    console.log("Script timeout reached.");
+    if (!clicked) {
+        console.log("❌ DSport nahi mila frame mein bhi. Checking main page...");
+        // Fallback to main page click
+        await page.evaluate(() => {
+            const all = Array.from(document.querySelectorAll('*'));
+            const target = all.find(e => e.innerText && e.innerText.toLowerCase().includes('dsport'));
+            if (target) target.click();
+        });
+    }
+
+    await new Promise(r => setTimeout(r, 40000)); // Extra wait
+    console.log("Timeout.");
     await browser.close();
 }
 
