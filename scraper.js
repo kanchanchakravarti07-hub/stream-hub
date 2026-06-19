@@ -14,6 +14,8 @@ async function runScraper() {
         if (url.includes('.m3u8')) {
             console.log("🔥 SNATCHED: " + url);
             fs.writeFileSync('channels.json', JSON.stringify({ "DSport": url }));
+            // Link milne par bhi 5 second rukenge taaki file likhi jaye
+            await new Promise(r => setTimeout(r, 5000));
             await browser.close();
             process.exit(0);
         }
@@ -22,36 +24,36 @@ async function runScraper() {
     console.log("1. Opening site...");
     await page.goto('https://iptv-eldbert.xyz/', { waitUntil: 'networkidle2' });
 
-    // Step 2: FIFA World Cup category (Human-like event dispatch)
-    console.log("2. Clicking 'FIFA World Cup' category...");
+    // Step 2 & 3: Click with check
+    console.log("2. Clicking category & channel...");
     await page.evaluate(() => {
-        const elements = Array.from(document.querySelectorAll('*'));
-        const cat = elements.find(el => el.innerText && el.innerText.includes('FIFA World Cup'));
-        if (cat) {
-            cat.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-        }
+        const all = Array.from(document.querySelectorAll('*'));
+        const cat = all.find(e => e.innerText && e.innerText.includes('FIFA World Cup'));
+        if (cat) cat.click();
     });
-
-    await new Promise(r => setTimeout(r, 7000)); // Load wait
-
-    // Step 3: DSports channel click (Human-like event dispatch)
-    console.log("3. Clicking 'DSports' channel...");
-    await page.evaluate(() => {
-        const elements = Array.from(document.querySelectorAll('*'));
-        const chan = elements.find(el => el.innerText && el.innerText.toLowerCase().includes('dsports'));
-        if (chan) {
-            chan.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-            chan.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-            chan.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-        }
-    });
-
-    // Step 4: Stream ke liye extra wait
-    console.log("Waiting for stream to initiate...");
-    await new Promise(r => setTimeout(r, 25000)); 
     
+    await new Promise(r => setTimeout(r, 5000));
+
+    await page.evaluate(() => {
+        const all = Array.from(document.querySelectorAll('*'));
+        const chan = all.find(e => e.innerText && e.innerText.toLowerCase().includes('dsports'));
+        if (chan) chan.click();
+    });
+
+    // Step 4: Yahan "Wait for Video Player" add kar rahe hain
+    console.log("Waiting for video player to initialize...");
+    try {
+        // Website ka video tag '#v' ya 'video' hone ka wait karenge
+        await page.waitForSelector('video', { timeout: 40000 });
+        console.log("Video player element found! Sniffing link...");
+    } catch (e) {
+        console.log("Video player not found, trying anyway...");
+    }
+
+    await new Promise(r => setTimeout(r, 30000)); // Total 70s ka time mila
     console.log("Cycle complete.");
     await browser.close();
 }
 
 runScraper();
+
