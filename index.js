@@ -1,9 +1,20 @@
-const express = require('express');
+import express from 'express';
+import fs from 'fs';
+
 const app = express();
-const fs = require('fs');
+
+// Public folder serve karo
 app.use(express.static('public'));
+
+// Channels API
 app.get('/channels', (req, res) => {
-    const data = JSON.parse(fs.readFileSync('channels.json', 'utf8'));
-    res.json(data);
+    try {
+        const data = fs.readFileSync('channels.json', 'utf8');
+        res.json(JSON.parse(data));
+    } catch (err) {
+        res.status(500).json({ error: "Could not read channels.json" });
+    }
 });
-app.listen(process.env.PORT || 3000);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
