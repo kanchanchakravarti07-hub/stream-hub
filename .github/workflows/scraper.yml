@@ -1,0 +1,21 @@
+name: Auto-Scraper
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with: { node-version: '18' }
+      - run: npm install puppeteer
+      - run: node scraper.js
+      - name: Commit changes
+        run: |
+          git config --global user.name "Kanchan-Bot"
+          git config --global user.email "bot@kanchan.com"
+          git add channels.json
+          git commit -m "Auto-update links" || exit 0
+          git push
