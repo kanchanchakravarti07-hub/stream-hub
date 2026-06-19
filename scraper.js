@@ -52,9 +52,12 @@ async function runScraper() {
             if (target) target.click();
         });
     }
-
+ 
     await new Promise(r => setTimeout(r, 40000)); // Extra wait
     console.log("Timeout.");
+       // Scraper.js ke bilkul end mein (browser.close() se pehle)
+await page.screenshot({ path: 'debug.png', fullPage: true });
+console.log("Screenshot saved as debug.png");
     await browser.close();
 }
 
