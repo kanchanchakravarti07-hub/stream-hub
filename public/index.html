@@ -30,7 +30,34 @@
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
         var player = videojs('vid');
+        async function init() {
+            console.log("Init start...");
+            try {
+                const res = await fetch('/channels');
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                const ch = await res.json();
+                console.log("Channels:", ch);
+                
+                const grid = document.getElementById('channelGrid');
+                const keys = Object.keys(ch);
+                
+                if (keys.length === 0) {
+                    grid.innerHTML = "<p style='color:red;'>Channels file khali hai bhai, scraper check kar!</p>";
+                    return;
+                }
 
+                keys.forEach(name => {
+                    let div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `<h3>${name}</h3><span class="live-badge">● LIVE</span>`;
+                    div.onclick = () => play(ch[name]);
+                    grid.appendChild(div);
+                });
+            } catch(e) {
+                console.error("Critical Error:", e);
+                document.body.innerHTML += `<p style='color:red;'>Error: ${e.message}</p>`;
+            }
+        }
         async function init() {
             try {
                 const res = await fetch('/channels');
