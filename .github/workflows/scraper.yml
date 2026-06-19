@@ -10,7 +10,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with: { node-version: '18' }
-      - run: npm install puppeteer
+      - run: npm install
+      # Yeh line Chrome download karegi
+      - run: npx puppeteer browsers install chrome
       - run: node scraper.js
       - name: Commit changes
         run: |
