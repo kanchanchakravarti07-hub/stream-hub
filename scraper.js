@@ -1,5 +1,5 @@
-const puppeteer = require('puppeteer');
-const fs = require('fs');
+import puppeteer from 'puppeteer';
+import fs from 'fs';
 
 async function runScraper() {
     const browser = await puppeteer.launch({ 
@@ -8,7 +8,7 @@ async function runScraper() {
     });
     const page = await browser.newPage();
     
-    // Sniffer: Request sniff karke m3u8 link capture karega
+    // Sniffer
     page.on('response', async (res) => {
         const url = res.url();
         if (url.includes('.m3u8')) {
@@ -22,13 +22,10 @@ async function runScraper() {
     console.log("1. Navigating to index...");
     await page.goto('https://iptv-eldbert.xyz/iptv/', { waitUntil: 'networkidle2' });
 
-    console.log("2. Searching for DSport in channel list...");
+    console.log("2. Searching for DSport...");
     const clicked = await page.evaluate(() => {
-        // Saare 'a' tags dhoondho
         const links = Array.from(document.querySelectorAll('a'));
-        // 'dsport' text wala link dhoondho
         const target = links.find(el => el.innerText.toLowerCase().includes('dsport'));
-        
         if (target) {
             target.click();
             return true;
@@ -37,14 +34,12 @@ async function runScraper() {
     });
 
     if (clicked) {
-        console.log("3. Clicked successfully! Waiting for stream request...");
+        console.log("3. Clicked successfully! Waiting for stream...");
     } else {
-        console.log("❌ DSport link mila hi nahi page par!");
+        console.log("❌ DSport link mila hi nahi!");
     }
 
-    // Stream capture hone ke liye extra time
     await new Promise(r => setTimeout(r, 30000));
-    console.log("Script timeout reached.");
     await browser.close();
 }
 
