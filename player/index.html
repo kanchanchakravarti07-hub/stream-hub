@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stream Master</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+</head>
+<body>
+    <video id="my-video" class="video-js" controls autoplay playsinline></video>
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        var player = videojs('my-video');
+        async function load() {
+            const res = await fetch('/channels');
+            const data = await res.json();
+            if (data.DSport) {
+                player.src({ src: data.DSport, type: 'application/x-mpegURL' });
+                player.play();
+            }
+        }
+        load();
+    </script>
+</body>
+</html>

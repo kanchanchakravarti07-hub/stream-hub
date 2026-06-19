@@ -1,20 +1,48 @@
-import express from 'express';
-import fs from 'fs';
+const express = require('express');
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
+app.use(express.static('player'));
 
-// Public folder serve karo
-app.use(express.static('public'));
+async function startScraper() {
+    console.log("🚀 Launching Headless Snatcher...");
+    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-// Channels API
-app.get('/channels', (req, res) => {
+    page.on('request', (req) => {
+        if (req.url().includes('.m3u8')) {
+            console.log("🔥 SNATCHED: ", req.url());
+            fs.writeFileSync('channels.json', JSON.stringify({ "DSport": req.url() }));
+        }
+        req.continue();
+    });
+
     try {
-        const data = fs.readFileSync('channels.json', 'utf8');
-        res.json(JSON.parse(data));
-    } catch (err) {
-        res.status(500).json({ error: "Could not read channels.json" });
-    }
+        await page.setRequestInterception(true);
+        await page.goto('https://iptv-eldbert.xyz/iptv/', { waitUntil: 'networkidle2' });
+        
+        // Force click DSport
+        await page.evaluate(() => {
+            const links = Array.from(document.querySelectorAll('a'));
+            const target = links.find(el => el.innerText.toLowerCase().includes('dsport'));
+            if (target) target.click();
+        });
+
+        await new Promise(r => setTimeout(r, 25000));
+        console.log("✅ Scraper cycle finished.");
+    } catch (e) { console.error("❌ Error:", e.message); }
+    await browser.close();
+}
+
+// Scraper trigger
+setInterval(startScraper, 3600000); 
+startScraper();
+
+app.get('/channels', (req, res) => {
+    res.sendFile(path.join(__dirname, 'channels.json'));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(process.env.PORT || 3000, () => console.log("🚀 Server Live!"));
