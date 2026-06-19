@@ -12,7 +12,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
     page.on('response', async (res) => {
         const url = res.url();
+
         if (url.includes('.m3u8')) {
+            console.log(">>> [SCRAPER FOUND LINK]:", url);
             const name = "Channel_" + Object.keys(foundLinks).length;
             foundLinks[name] = url;
         }
