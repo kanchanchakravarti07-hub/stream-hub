@@ -8,7 +8,7 @@ async function runScraper() {
     });
     const page = await browser.newPage();
     
-    // Sniffer
+    // Sniffer: Request sniff karke m3u8 link capture karega
     page.on('response', async (res) => {
         const url = res.url();
         if (url.includes('.m3u8')) {
@@ -19,27 +19,29 @@ async function runScraper() {
         }
     });
 
-    console.log("1. Navigating to index...");
+    console.log("1. Navigating...");
     await page.goto('https://iptv-eldbert.xyz/iptv/', { waitUntil: 'networkidle2' });
 
-    console.log("2. Searching for DSport...");
-    const clicked = await page.evaluate(() => {
-        const links = Array.from(document.querySelectorAll('a'));
-        const target = links.find(el => el.innerText.toLowerCase().includes('dsport'));
-        if (target) {
-            target.click();
-            return true;
+    // DEBUG: Page par kya kya links hain, ye print karo
+    const links = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('a')).map(a => a.innerText + " | " + a.href);
+    });
+    console.log("DEBUG: Links found on page:", JSON.stringify(links, null, 2));
+
+    // CLICK LOGIC: Generic search
+    await page.evaluate(() => {
+        const allElements = document.querySelectorAll('*'); // Sab kuch scan karo
+        for (let el of allElements) {
+            if (el.innerText && el.innerText.toLowerCase().includes('dsport')) {
+                console.log("Found element with dsport text, clicking...");
+                el.click();
+                break;
+            }
         }
-        return false;
     });
 
-    if (clicked) {
-        console.log("3. Clicked successfully! Waiting for stream...");
-    } else {
-        console.log("❌ DSport link mila hi nahi!");
-    }
-
     await new Promise(r => setTimeout(r, 30000));
+    console.log("Script timeout reached.");
     await browser.close();
 }
 
