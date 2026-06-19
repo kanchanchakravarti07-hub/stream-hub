@@ -1,43 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Stream Master | Live</title>
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <style>
+        body { background: #0f0f13; color: white; font-family: sans-serif; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .card { background: #1a1a24; padding: 15px; border-radius: 10px; cursor: pointer; text-align: center; }
+        .card:hover { background: #2a2a3e; }
+        #vid { width: 100%; max-width: 800px; margin: 0 auto; display: block; }
+    </style>
 </head>
 <body>
-    <select id="sel" onchange="load()"></select>
-    
-    <video id="vid" class="video-js vjs-big-play-centered" controls autoplay playsinline width="640" height="360"></video>
+    <h1>FIFA World Cup 2026 - Live</h1>
+    <video id="vid" class="video-js vjs-big-play-centered" controls autoplay playsinline></video>
+    <div class="grid" id="channelGrid"></div>
 
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
         var player = videojs('vid');
-
         async function init() {
-            try {
-                const res = await fetch('/channels');
-                const ch = await res.json();
-                const sel = document.getElementById('sel');
-                
-                Object.keys(ch).forEach(name => {
-                    let opt = document.createElement('option');
-                    opt.value = ch[name];
-                    opt.innerHTML = name;
-                    sel.appendChild(opt);
-                });
-                load(); // Pehla channel load karo
-            } catch(e) {
-                console.error("Channels load nahi hue:", e);
-            }
+            const res = await fetch('/channels');
+            const ch = await res.json();
+            const grid = document.getElementById('channelGrid');
+            
+            Object.keys(ch).forEach(name => {
+                let div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `<h3>${name}</h3><p>LIVE</p>`;
+                div.onclick = () => play(ch[name]);
+                grid.appendChild(div);
+            });
         }
-
-        function load() {
-            const url = document.getElementById('sel').value;
-            const proxyUrl = "https://iptv-eldbert.xyz/proxy?url=" + encodeURIComponent(url);
-            player.src({ src: proxyUrl, type: 'application/x-mpegURL' });
+        function play(url) {
+            player.src({ src: "https://iptv-eldbert.xyz/proxy?url=" + encodeURIComponent(url), type: 'application/x-mpegURL' });
             player.play();
         }
-
-        // Page load hote hi init chalao
         init();
     </script>
 </body>
