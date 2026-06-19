@@ -1,36 +1,51 @@
-import puppeteer from 'puppeteer';
-import fs from 'fs';
+const puppeteer = require('puppeteer');
+const fs = require('fs');
 
-(async () => {
+async function runScraper() {
     const browser = await puppeteer.launch({ 
         headless: "new",
         args: ['--no-sandbox', '--disable-setuid-sandbox'] 
     });
     const page = await browser.newPage();
     
-    // 1. Request Listener: Jaise hi .m3u8 link dikhe, grab kar lo
-    page.on('request', (req) => {
-        const url = req.url();
+    // Sniffer: Request sniff karke m3u8 link capture karega
+    page.on('response', async (res) => {
+        const url = res.url();
         if (url.includes('.m3u8')) {
-            console.log(">>> [SNATCHED FROM ELDBERT]:", url);
+            console.log("🔥 SNATCHED LINK: " + url);
             fs.writeFileSync('channels.json', JSON.stringify({ "DSport": url }));
-            browser.close();
+            await browser.close();
             process.exit(0);
         }
     });
 
-    // 2. Page par jao
+    console.log("1. Navigating to index...");
     await page.goto('https://iptv-eldbert.xyz/iptv/', { waitUntil: 'networkidle2' });
 
-    // 3. DSport link par click simulation
-    // Inspect karke dekha hai ki link text "DSports" ya "DSport" hota hai
-    await page.evaluate(() => {
+    console.log("2. Searching for DSport in channel list...");
+    const clicked = await page.evaluate(() => {
+        // Saare 'a' tags dhoondho
         const links = Array.from(document.querySelectorAll('a'));
+        // 'dsport' text wala link dhoondho
         const target = links.find(el => el.innerText.toLowerCase().includes('dsport'));
-        if (target) target.click();
+        
+        if (target) {
+            target.click();
+            return true;
+        }
+        return false;
     });
 
-    console.log("Waiting for stream to initiate...");
-    await new Promise(r => setTimeout(r, 20000)); // 20 seconds wait
+    if (clicked) {
+        console.log("3. Clicked successfully! Waiting for stream request...");
+    } else {
+        console.log("❌ DSport link mila hi nahi page par!");
+    }
+
+    // Stream capture hone ke liye extra time
+    await new Promise(r => setTimeout(r, 30000));
+    console.log("Script timeout reached.");
     await browser.close();
-})();
+}
+
+runScraper();
