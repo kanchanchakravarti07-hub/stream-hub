@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" /></head>
+<body>
+    <select id="sel" onchange="load()"></select>
+    <video id="vid" class="video-js" controls autoplay playsinline></video>
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        var player = videojs('vid');
+        async function load() {
+            const res = await fetch('/channels');
+            const ch = await res.json();
+            const url = document.getElementById('sel').value;
+            player.src({ src: "https://iptv-eldbert.xyz/proxy?url=" + encodeURIComponent(url), type: 'application/x-mpegURL' });
+            player.play();
+        }
+        // Init logic here...
+    </script>
+</body>
+</html>
