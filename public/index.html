@@ -1,55 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Stream Master | Live</title>
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <style>
-        body { background: #050505; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 40px; }
-        h1 { font-size: 2rem; margin-bottom: 30px; border-left: 5px solid #e50914; padding-left: 15px; }
-        
-        /* Player ka style */
-        #vid { width: 100%; max-width: 900px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 40px; }
-    
-        /* Grid ka style */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
-        
-        /* Card ka style */
-        .card { 
-            background: #181818; padding: 25px; border-radius: 12px; 
-            transition: transform 0.3s, background 0.3s; cursor: pointer;
-            border: 1px solid #333; text-align: center;
-        }
-        .card:hover { transform: scale(1.05); background: #222; border-color: #e50914; }
-        .card h3 { margin: 0 0 10px 0; font-size: 1.2rem; }
-        .live-badge { color: #e50914; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; }
-    </style>
-</head>
-<body>
-    <h1>FIFA World Cup 2026 - Live</h1>
-    <video id="vid" class="video-js vjs-big-play-centered" controls autoplay playsinline></video>
-    <div class="grid" id="channelGrid"></div>
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-    <script>
-        var player = videojs('vid');
-        async function init() {
-            const res = await fetch('/channels');
-            const ch = await res.json();
-            const grid = document.getElementById('channelGrid');
-            
-            Object.keys(ch).forEach(name => {
-                let div = document.createElement('div');
-                div.className = 'card';
-div.innerHTML = `<h3>${name}</h3><span class="live-badge">● LIVE</span>`;
-                div.onclick = () => play(ch[name]);
-                grid.appendChild(div);
-            });
-        }
-        function play(url) {
-            player.src({ src: "https://iptv-eldbert.xyz/proxy?url=" + encodeURIComponent(url), type: 'application/x-mpegURL' });
-            player.play();
-        }
-        init();
-    </script>
-</body>
-</html>
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+
+// Public folder serve karo
+app.use(express.static('public'));
+
+// Channels API (Sahi path ke saath)
+app.get('/channels', (req, res) => {
+    try {
+        const filePath = path.join(__dirname, 'channels.json');
+        const data = fs.readFileSync(filePath, 'utf8');
+        res.json(JSON.parse(data));
+    } catch (err) {
+        console.error("Error reading channels.json:", err);
+        res.status(500).json({ error: "File not found" });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
